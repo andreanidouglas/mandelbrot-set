@@ -52,5 +52,11 @@ Mkfile.old
 dkms.conf
 
 # Remove indent metafiles
-#*.h~
-#*.c~
+*.h~
+*.c~
+
+# Remove vscode metafiles
+.vscode/*
+
+
+bin/*

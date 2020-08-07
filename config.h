@@ -1,0 +1,8 @@
+#define BAIL_OUT 16777215
+#define MAX_ITER 2147483647
+
+#define WIDTH 1024
+#define HEIGHT 1024
+
+#define THREAD_COUNT 16
+#define BUFFER_SIZE  256
