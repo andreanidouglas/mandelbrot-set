@@ -1,5 +1,5 @@
-#define BAIL_OUT 16777215
-#define MAX_ITER 2147483647
+#define BAIL_OUT 8192
+#define MAX_ITER 16384
 
 #define WIDTH 1024
 #define HEIGHT 1024
