@@ -87,21 +87,17 @@ void *consume(void *b)
 	/* This will not work on a multi-consumer program 
 	while (i < buf->prop.width * buf->prop.height) { */
 	for(;;){
-		if (!is_empty(buf->q)) {
-			m = dequeue(buf->q, buf->lock);
-			x = map(m->x, 0, buf->prop.width, -1, 1);
-			y = map(m->y, 0, buf->prop.height, -1, 1);
-			//fprintf(stdout, "\nSending %d %d", m->x, m->y, k);
+		m = dequeue(buf->q, buf->lock);
+		if (m == NULL) return NULL; // if m is null then the queue is empty ?
+		x = map(m->x, 0, buf->prop.width, -1, 1);
+		y = map(m->y, 0, buf->prop.height, -1, 1);
+		//fprintf(stdout, "\nSending %d %d", m->x, m->y, k);
 
-			k = mandelbrot_pix(x, y, buf->prop.bail_out,
-					buf->prop.max_iter);
-			buf->result_field[m->y + m->x * buf->prop.height] = k;
-			free(m);
-			i++;
-		}
-		if(is_empty(buf->q) && buf->produce_end){
-			return NULL;
-		}
+		k = mandelbrot_pix(x, y, buf->prop.bail_out,
+				buf->prop.max_iter);
+		buf->result_field[m->y + m->x * buf->prop.height] = k;
+		free(m);
+		i++;
 	}
 	return NULL;
 }
@@ -109,7 +105,7 @@ void *consume(void *b)
 int main(int argc, char **argv)
 {
 
-	pthread_t consumer1, consumer2;
+	pthread_t consumer[THREAD_COUNT];
 	pthread_t producer;
 	pthread_attr_t attr;
 	pthread_mutex_t lock;
@@ -141,17 +137,16 @@ int main(int argc, char **argv)
 
 	/* Create and start threads */
 	pthread_create(&producer, &attr, produce, &buf);
-	pthread_create(&consumer1, &attr, consume, &buf);
-	pthread_create(&consumer2, &attr, consume, &buf);
-
-
 
 	pthread_join(producer, NULL);
-	printf("\nFinished producer!");
-	pthread_join(consumer1, NULL);
-	printf("\nFinished consumer 1!");
-	pthread_join(consumer2, NULL);
-	printf("\nFinished consumer 2!");
+	
+	for (int i=0; i<THREAD_COUNT; i++) {
+		pthread_create(&consumer[i], &attr, consume, &buf);
+	}
+
+	for (int i=0; i<THREAD_COUNT; i++) {
+		pthread_join(consumer[i], NULL);
+	}
 
 	/* Create the png image with the result buffer */
 	pix_row rows[WIDTH];

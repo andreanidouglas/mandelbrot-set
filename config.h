@@ -4,5 +4,5 @@
 #define WIDTH 1024
 #define HEIGHT 1024
 
-#define THREAD_COUNT 16
+#define THREAD_COUNT 36
 #define BUFFER_SIZE  256

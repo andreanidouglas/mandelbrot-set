@@ -40,4 +40,4 @@ queue_t *initialize_queue();
 void enqueue(queue_t * q, mandel_t * w, pthread_mutex_t * lock);
 mandel_t *dequeue(queue_t * q, pthread_mutex_t * lock);
 void destroy_queue(queue_t * q);
-int is_empty(queue_t * q);
+int is_empty(queue_t * q, pthread_mutex_t * lock);

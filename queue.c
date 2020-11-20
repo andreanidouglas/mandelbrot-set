@@ -39,23 +39,35 @@ mandel_t *dequeue(queue_t * q, pthread_mutex_t * lock)
 {
 	struct queue_node_t *aux;
 	mandel_t *ret_val;
-
-	if (q->head != NULL) {
-		pthread_mutex_lock(lock);
-		ret_val = q->head->node;
-		aux = q->head;
-		q->head = q->head->next;
-		pthread_mutex_unlock(lock);
-		free(aux);
-		return (ret_val);
+	pthread_mutex_lock(lock);
+	
+	if (q->head == NULL) {
+		ret_val = NULL;
 	}
-	return NULL;
+	else if (q->head == q->tail) {
+		aux = q->head;
+		ret_val = aux->node;
+		q->head = NULL;
+		q->tail = NULL;
+	}
+	else {
+		aux = q->head;
+		ret_val = aux->node;
+		q->head = aux->next;
+	}
+	pthread_mutex_unlock(lock);
+	return ret_val;
 
 }
 
-int is_empty(queue_t * q)
+int is_empty(queue_t * q, pthread_mutex_t * lock)
 {
-	return (q->head == NULL);
+	int ret = 0;
+	pthread_mutex_lock(lock);
+	if (q->head == NULL) ret = 1;
+	pthread_mutex_unlock(lock);
+	
+	return (ret);
 }
 
 void destroy_queue(queue_t * q)
