@@ -34,30 +34,11 @@ int mandelbrot_pix(double x, double y, int bail_out, int max_iter)
     return max_iter;
 }
 
-void mandelbrot(int *field, int w, int h, int bail_out, int max_iter,
-		int thread_count)
-{
-
-    for (int i = 0; i < w; i++) {
-	for (int j = 0; j < h; j++) {
-	    double x = map(i, 0, w, -1, 1);
-	    double y = map(j, 0, h, -1, 1);
-
-	    int k = mandelbrot_pix(x, y, BAIL_OUT, MAX_ITER);
-	    fprintf(stdout, "\nComputing %d %d = %d", i, j, k);
-	    field[i + j * h] = k;
-	}
-    }
-
-}
 
 void *produce(void *b)
 {
     mandel_buf_t *buf;
     mandel_t *m;
-
-    double x;
-    double y;
 
     buf = (mandel_buf_t *) b;
 
@@ -102,7 +83,7 @@ void *consume(void *b)
     return NULL;
 }
 
-int main(int argc, char **argv)
+int main()
 {
 
     pthread_t consumer[THREAD_COUNT];

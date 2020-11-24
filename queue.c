@@ -4,7 +4,7 @@ queue_t *initialize_queue()
 {
     queue_t *q;
 
-    q = (queue_t *) malloc(sizeof(queue_t *));
+    q = (queue_t *) malloc(sizeof(queue_t ));
 
     return q;
 }
