@@ -16,14 +16,15 @@ void enqueue(queue_t * q, mandel_t * w, pthread_mutex_t * lock)
     pthread_mutex_lock(lock);
 
     if (q->head == NULL) {
-	q->head = (struct queue_node_t *)
-	    malloc(sizeof(struct queue_node_t *));
+	q->head = (struct queue_node_t * )
+	    malloc(sizeof(struct queue_node_t ));
 	q->head->next = NULL;
 	q->head->node = w;
 	q->tail = q->head;
     } else {
-	aux = (struct queue_node_t *)
-	    malloc(sizeof(struct queue_node_t *));
+	aux = (struct queue_node_t * )
+	    malloc(sizeof(struct queue_node_t ));
+
 	aux->next = NULL;
 	aux->node = w;
 	q->tail->next = aux;
