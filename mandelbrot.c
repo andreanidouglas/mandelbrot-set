@@ -89,18 +89,17 @@ void *consume(void *b)
     int size = fill_buffer(mandel_buf, buf->q, buf->lock);
     if ( size == 0 )
             return NULL;
-    for ( int i=0; i < size; i++ ) {
+    for ( int i=0; i < BUFFER_SIZE; i++ ) {
         m = mandel_buf[i];
 	    if (m == NULL)
-	        break;	// if m is null then the queue is empty ?
+	        break;
 	    x = map( m->x, 0, buf->prop.width,  -1.0 , 1.0 );
 	    y = map( m->y, 0, buf->prop.height, -1.0 , 1.0 );
 
 	    k = mandelbrot_pix(x, y, buf->prop.bail_out, buf->prop.max_iter);
 	    buf->result_field[m->y + m->x * buf->prop.height] = k;
 	    free(m);
-	    i++;
-        }
+    }
         
     reset_buffer(mandel_buf);
     }
