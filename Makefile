@@ -19,7 +19,7 @@ bin/obj/img.o: img.c
 bin/obj/queue.o: queue.c
 	$(CC) $(CFLAGS) -c queue.c -o $(OBJ)/queue.o 
 
-pre:
+pre: 
 	mkdir -p bin/obj
 
 clean:

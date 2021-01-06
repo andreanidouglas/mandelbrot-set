@@ -12,6 +12,8 @@ int mandelbrot_pix(double x, double y, int bail_out, int max_iter)
     int k;
     double real, imaginary, x2, y2;
 
+    x += -1;
+
     x2 = x;
     y2 = y;
 
@@ -25,7 +27,7 @@ int mandelbrot_pix(double x, double y, int bail_out, int max_iter)
 	// x = real + c
 	x = real + x2;
 	// y = imaginary + c
-	y = imaginary +y2;
+	y = imaginary + y2;
 
 	if ((x * x + y * y) > bail_out) {
 	    return k;
@@ -55,31 +57,54 @@ void *produce(void *b)
     return NULL;
 }
 
+void reset_buffer(mandel_t **buf) {
+    for (int i=0; i<BUFFER_SIZE; i++){
+        buf[i] = NULL;
+    }
+}
+
+int fill_buffer(mandel_t **buf, queue_t *q, pthread_mutex_t *lock) {
+    int size=0;
+    for ( int i=0; i<BUFFER_SIZE; i++ ) {
+        buf[i] = dequeue(q, lock);
+        if (buf[i] != NULL)
+            size++;
+    }
+    return size;
+}
+
 void *consume(void *b)
 {
     mandel_buf_t *buf;
     mandel_t *m;
     double x, y;
-    int k, i;
+    int k;
+    
+    mandel_t *mandel_buf[BUFFER_SIZE];
 
     buf = (mandel_buf_t *) b;
 
-
-    /* This will not work on a multi-consumer program 
-       while (i < buf->prop.width * buf->prop.height) { */
     for (;;) {
-	m = dequeue(buf->q, buf->lock);
-	if (m == NULL)
-	    return NULL;	// if m is null then the queue is empty ?
-	x = map(m->x, 0, buf->prop.width, -1, 1);
-	y = map(m->y, 0, buf->prop.height, -1, 1);
-	//fprintf(stdout, "\nSending %d %d", m->x, m->y, k);
 
-	k = mandelbrot_pix(x, y, buf->prop.bail_out, buf->prop.max_iter);
-	buf->result_field[m->y + m->x * buf->prop.height] = k;
-	free(m);
-	i++;
+    int size = fill_buffer(mandel_buf, buf->q, buf->lock);
+    if ( size == 0 )
+            return NULL;
+    for ( int i=0; i < size; i++ ) {
+        m = mandel_buf[i];
+	    if (m == NULL)
+	        break;	// if m is null then the queue is empty ?
+	    x = map( m->x, 0, buf->prop.width,  -1.0 , 1.0 );
+	    y = map( m->y, 0, buf->prop.height, -1.0 , 1.0 );
+
+	    k = mandelbrot_pix(x, y, buf->prop.bail_out, buf->prop.max_iter);
+	    buf->result_field[m->y + m->x * buf->prop.height] = k;
+	    free(m);
+	    i++;
+        }
+        
+    reset_buffer(mandel_buf);
     }
+
     return NULL;
 }
 
@@ -142,13 +167,19 @@ int main()
     for (int i = 0; i < WIDTH; i++) {
 	rows[i].p = malloc(HEIGHT * sizeof(pix));
 	for (int j = 0; j < HEIGHT; j++) {
-	    p.r =
-		map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
-	    p.g =
-		map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
-	    p.b =
-		map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
+		if ( buf.result_field[i * HEIGHT + j] == MAX_ITER ) 
+		{
+			p.r = 255; p.g = 255; p.b = 255;
+		} else {
+	    		p.r =
+				map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
+	    		p.g =
+				map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
+	    		p.b =
+				map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
+		}
 	    rows[i].p[j] = p;
+
 	}
     }
     sprintf(filename, "mandel.png");
