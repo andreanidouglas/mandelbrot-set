@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(mandelbrot-set) 
 
 
@@ -19,20 +19,26 @@ add_library(queue SHARED
 
 target_include_directories(queue                                                  
         PUBLIC                                                                  
-        ${PROJECT_SOURCE_DIR}                                                   
+        ${PROJECT_SOURCE_DIR}                                                  
 )
 
 find_package (PNG REQUIRED)
 find_package (Threads REQUIRED)
+
+if (PNG_FOUND)
+        message ( "PNG FOUND AT:" ${PNG_INCLUDE_DIRS})
+endif()
 
 # -- Build Executable
 
 add_executable(Mandelbrot mandelbrot.c)
 
 target_include_directories(Mandelbrot
-        PRIVATE
+        PUBLIC 
         ${PROJECT_SOURCE_DIR}
 )
+
+include_directories(${PNG_INCLUDE_DIRS})
 
 target_link_libraries(Mandelbrot
         PRIVATE

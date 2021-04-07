@@ -63,3 +63,4 @@ bin/*
 *.png
 compile_commands.json
 .cache/
+build/
