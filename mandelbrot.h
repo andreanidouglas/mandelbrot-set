@@ -34,6 +34,8 @@ typedef struct mandel_buf_t {
     mandel_prop_t prop;
     pthread_mutex_t *lock;
     int produce_end;
+    ssize_t thread_num;
+    ssize_t thread_pool[THREAD_COUNT];
 } mandel_buf_t;
 
 queue_t *initialize_queue();

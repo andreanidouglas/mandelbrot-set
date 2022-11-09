@@ -13,7 +13,8 @@ void enqueue(queue_t * q, mandel_t * w, pthread_mutex_t * lock)
 {
     struct queue_node_t *aux;
 
-    pthread_mutex_lock(lock);
+    (void) lock;
+
 
     if (q->head == NULL) {
 	q->head = (struct queue_node_t * )
@@ -31,14 +32,15 @@ void enqueue(queue_t * q, mandel_t * w, pthread_mutex_t * lock)
 	q->tail = aux;
     }
 
-    pthread_mutex_unlock(lock);
 }
 
 mandel_t *dequeue(queue_t * q, pthread_mutex_t * lock)
 {
+
+    (void) lock;
     struct queue_node_t *aux;
     mandel_t *ret_val;
-    pthread_mutex_lock(lock);
+    //pthread_mutex_lock(lock);
 
     if (q->head == NULL) {
 	ret_val = NULL;
@@ -52,7 +54,7 @@ mandel_t *dequeue(queue_t * q, pthread_mutex_t * lock)
 	ret_val = aux->node;
 	q->head = aux->next;
     }
-    pthread_mutex_unlock(lock);
+    //pthread_mutex_unlock(lock);
     return ret_val;
 
 }
