@@ -36,16 +36,15 @@ int mandelbrot_pix(double x, double y, int bail_out, int max_iter) {
 
 void *produce(void *b) {
   mandel_buf_t *buf;
-  mandel_t *m;
+  mandel_t m;
 
   buf = (mandel_buf_t *)b;
 
   pthread_mutex_lock(buf->lock);
   for (int i = 0; i < buf->prop.width; i++) {
     for (int j = 0; j < buf->prop.height; j++) {
-      m = malloc(sizeof(mandel_t));
-      m->x = i;
-      m->y = j;
+      m.x = i;
+      m.y = j;
       enqueue(buf->q, m, buf->lock);
     }
   }
@@ -55,19 +54,20 @@ void *produce(void *b) {
   return NULL;
 }
 
-void reset_buffer(mandel_t **buf) {
+void reset_buffer(mandel_t *buf) {
   for (int i = 0; i < BUFFER_SIZE; i++) {
-    buf[i] = NULL;
+    buf[i].x = -1;
+    buf[i].y = -1;
   }
 }
 
-int fill_buffer(mandel_t **buf, queue_t *q, pthread_mutex_t *lock) {
+int fill_buffer(mandel_t *buf, queue_t *q, pthread_mutex_t *lock) {
   int size = 0;
 
   pthread_mutex_lock(lock);
   for (int i = 0; i < BUFFER_SIZE; i++) {
     buf[i] = dequeue(q, lock);
-    if (buf[i] != NULL)
+    if (buf[i].x != -1 && buf[i].y != -1)
       size++;
   }
   
@@ -77,11 +77,11 @@ int fill_buffer(mandel_t **buf, queue_t *q, pthread_mutex_t *lock) {
 
 void *consume(void *b) {
   mandel_buf_t *buf;
-  mandel_t *m;
+  mandel_t m;
   double x, y;
   int k;
   ssize_t thread_id;
-  mandel_t *mandel_buf[BUFFER_SIZE];
+  mandel_t mandel_buf[BUFFER_SIZE];
 
   buf = (mandel_buf_t *)b;
   thread_id = buf->thread_num;
@@ -102,14 +102,13 @@ void *consume(void *b) {
     buf->thread_pool[thread_id]++;
     for (int i = 0; i < BUFFER_SIZE; i++) {
       m = mandel_buf[i];
-      if (m == NULL)
+      if (m.x == -1 && m.y == -1)
         break;
-      x = map(m->x, 0, buf->prop.width, -1.0, 1.0);
-      y = map(m->y, 0, buf->prop.height, -1.0, 1.0);
+      x = map(m.x, 0, buf->prop.width, -1.0, 1.0);
+      y = map(m.y, 0, buf->prop.height, -1.0, 1.0);
 
       k = mandelbrot_pix(x, y, buf->prop.bail_out, buf->prop.max_iter);
-      buf->result_field[m->y + m->x * buf->prop.height] = k;
-     free(m);
+      buf->result_field[m.y + m.x * buf->prop.height] = k;
     }
 
     reset_buffer(mandel_buf);
@@ -171,41 +170,8 @@ int main() {
   for (int i = 0; i < THREAD_COUNT; i++) {
           printf("Thread [%d]: %zd {%zd}\n\n", i, buf.thread_pool[i], buf.thread_pool[i] * BUFFER_SIZE);
   }
-
-  /* Create the png image with the result buffer */
-  pix_row rows[WIDTH];
-  pix p;
-
-  char filename[30];
-  image img;
-  p.r = 200;
-  p.g = 200;
-  p.b = 200;
-
-  for (int i = 0; i < WIDTH; i++) {
-    rows[i].p = malloc(HEIGHT * sizeof(pix));
-    for (int j = 0; j < HEIGHT; j++) {
-      if (buf.result_field[i * HEIGHT + j] == MAX_ITER) {
-        p.r = 255;
-        p.g = 255;
-        p.b = 255;
-      } else {
-        p.r = map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
-        p.g = map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
-        p.b = map(buf.result_field[i * HEIGHT + j], 0, MAX_ITER, 0, 255);
-      }
-      rows[i].p[j] = p;
-    }
-  }
-  sprintf(filename, "mandel.png");
-  img = initialize_png("mandelbrot", filename, WIDTH, HEIGHT);
-  write_image(&img, rows);
-  finish_image(&img);
-  for (int i = 0; i < WIDTH; i++) {
-
-    free(rows[i].p);
-  }
-
+  destroy_queue(buf.q);
+   
   free(buf.result_field);
 
   return (0);
