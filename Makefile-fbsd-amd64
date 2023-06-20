@@ -1,14 +1,14 @@
 CC=/usr/local/bin/gcc
-CFLAGS=-g -Wall -Wextra -Werror -D _DEFAULT_SOURCE -O0 -D_XOPEN_SOURCE=600 -std=iso9899:1999 -I/usr/local/include/ -I${PWD} 
+CFLAGS=-g -Wall -Wextra -Werror -D _DEFAULT_SOURCE -O0 -D_XOPEN_SOURCE=600 -std=iso9899:1999 -I/usr/local/include/ -I${PWD} -I${PWD}/raylib/src
 OUT=bin
 OBJ=$(OUT)/obj
-OBJS=$(OBJ)/mandelbrot.o $(OBJ)/img.o  $(OBJ)/queue.o   
+OBJS=$(OBJ)/mandelbrot.o  $(OBJ)/queue.o   
 
 
-all: pre bin/mandelbrot
+all: pre raylib bin/mandelbrot
 
 bin/mandelbrot: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)/mandelbrot -L/usr/local/lib/ -lpng -lpthread
+	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)/mandelbrot raylib/src/raylib.a -L/usr/local/lib/ -lpthread
 
 bin/obj/mandelbrot.o: mandelbrot.c config.h
 	$(CC) $(CFLAGS) -c mandelbrot.c -o $(OBJ)/mandelbrot.o
@@ -18,6 +18,9 @@ bin/obj/img.o: img.c
 
 bin/obj/queue.o: queue.c
 	$(CC) $(CFLAGS) -c queue.c -o $(OBJ)/queue.o 
+
+raylib: raylib/src/raylib.h
+	$(MAKE) -C raylib/src PLATFORM=DESKTOP
 
 pre:
 	mkdir -p bin/obj
