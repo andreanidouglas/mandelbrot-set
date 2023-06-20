@@ -1,4 +1,5 @@
 #include "mandelbrot.h"
+#include "raylib.h"
 
 double map(int value, int min, int max, int map_min, int map_max) {
   double R = (double)(map_max - map_min) / (double)(max - min);
@@ -171,6 +172,35 @@ int main() {
           printf("Thread [%d]: %zd {%zd}\n\n", i, buf.thread_pool[i], buf.thread_pool[i] * BUFFER_SIZE);
   }
   destroy_queue(buf.q);
+
+  const int window_width = WIDTH;
+  const int window_height = HEIGHT;
+  InitWindow(window_width, window_height, "Mandelbrot set");
+  SetTargetFPS(60);
+
+  Image mandelbrot_image = GenImageColor(WIDTH, HEIGHT, RED);
+  for (int i = 0; i < HEIGHT; i++) {
+      for (int j=0; j<WIDTH; j++) {
+        if (buf.result_field[i * HEIGHT + j] == MAX_ITER)
+            ImageDrawPixel(&mandelbrot_image, j, i, BLACK);
+        else 
+            ImageDrawPixel(&mandelbrot_image, j, i, RED);
+      }
+  }
+
+
+  ImageRotate(&mandelbrot_image, -90);
+  Texture2D canvas = LoadTextureFromImage(mandelbrot_image);
+
+  while (!WindowShouldClose()) {
+      BeginDrawing();
+      ClearBackground(GRAY);
+      DrawTexture(canvas, 0, 0, WHITE);
+      EndDrawing();
+  }
+
+  CloseWindow();
+
    
   free(buf.result_field);
 

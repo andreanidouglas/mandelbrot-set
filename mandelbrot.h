@@ -1,10 +1,9 @@
 #include <pthread.h>
-#include <semaphore.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
-
+#include "raylib.h"
 #include "config.h"
-#include "img.h"
 
 typedef struct queue {
   struct queue_node_t *head;
