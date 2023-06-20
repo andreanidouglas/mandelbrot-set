@@ -42,7 +42,6 @@ mandel_t dequeue(queue_t *q, pthread_mutex_t *lock) {
     aux = q->head;
     ret_val = aux->node; 
     free(q->head);
-    free(q->tail);
     q->head = NULL;
     q->tail = NULL;
  } else {
